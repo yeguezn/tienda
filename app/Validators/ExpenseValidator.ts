@@ -1,7 +1,7 @@
 import { schema, CustomMessages, rules } from '@ioc:Adonis/Core/Validator'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 
-export default class EmployeeValidator {
+export default class ExpenseValidator {
   constructor(protected ctx: HttpContextContract) {}
 
   /*
@@ -21,30 +21,27 @@ export default class EmployeeValidator {
    *       rules.email(),
    *       rules.unique({ table: 'users', column: 'email' }),
    *     ])
-   *    ```
+   *    ```bb
    */
   public schema = schema.create({
-    identificationNumber:schema.string([
-      rules.maxLength(8),
-      rules.regex(/^[0-9]{7,8}$/),
-      rules.unique({table:'employees', column:'identification_number'})
-    ]),
-    firstName: schema.string(),
-    lastName: schema.string(),
-    phoneNumber: schema.string.optional([
-      rules.regex(/^\+(?:[0-9] ?){6,14}[0-9]$/)
-    ]),
-    address: schema.string(),
-    email: schema.string([
-      rules.email(),
-      rules.unique({table:'employees', column:'email'})
-    ]),
-    password:schema.string([
-      rules.maxLength(8)
-    ]),
-
-    role:schema.number([
-      rules.exists({table:'roles', column:'id'})
+    products: schema.array().members(schema.object().members({
+      code:schema.string([
+        rules.minLength(4)
+      ]),
+      name:schema.string([
+        rules.maxLength(20)
+      ]),
+      stock:schema.number([
+        rules.range(1, 99999)
+      ]),
+      price:schema.number([
+        rules.range(1, 999999)
+      ])
+    
+    })),
+    
+    bankAccount:schema.number([
+      rules.exists({table:'bank_accounts', column:'id'})
     ])
   })
 

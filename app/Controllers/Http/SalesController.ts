@@ -14,32 +14,40 @@ export default class SalesController {
 
     })
 
-    let salesJSON = sales.map(sale => sale.serialize(
-      {
+    let salesJSON = sales.map(sale => {
+
+      return sale.serialize({
         fields:{
-
+  
           pick:['id', 'created_at']
-
+  
         },
+        
         relations:{
           employee:{
             fields:['id', 'first_name']
           },
+        
           customer:{
             fields:['id', 'first_name', 'last_name', 'identification_number']
           },
+        
           bankAccount:{
             fields:['id', 'name']
           }
         }
       })
-    )
+    })
 
     return response.status(200).send(salesJSON)
   }
 
 
-  public async store({ request, response, auth }: HttpContextContract) {
+  public async store({ request, response, auth, bouncer }: HttpContextContract) {
+
+    if (await bouncer.denies('isSeller')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
 
     let payload = await request.validate(SaleValidator)
     let subtotal:number
@@ -117,7 +125,11 @@ export default class SalesController {
 
   }
 
-  public async show({request, response}: HttpContextContract) {
+  public async show({request, response, bouncer}: HttpContextContract) {
+
+    if (await bouncer.denies('isSeller')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
 
     const sale = await Sale
     .query()
@@ -136,6 +148,7 @@ export default class SalesController {
       return response.status(404).send("It wasn't possible to find the resource")
       
     }
+
 
     return sale.serialize({
       fields:{
@@ -157,7 +170,12 @@ export default class SalesController {
     })
   }
 
-  public async destroy({ request, response }: HttpContextContract) {
+  public async destroy({ request, response, bouncer }: HttpContextContract) {
+    
+    if (await bouncer.denies('isSeller')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
+    
     const trx = await Database.transaction()
    
     try {

@@ -1,5 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Employee from 'App/Models/Employee'
+import Role from 'App/Models/Role'
 import EmployeeValidator from 'App/Validators/EmployeeValidator'
 import UpdateEmployeeValidator from 'App/Validators/UpdateEmployeeValidator'
 
@@ -11,12 +12,19 @@ export default class EmployeesController {
     
   }
     
-  public async store({request, response, auth}: HttpContextContract) {
+  public async store({request, response, bouncer, auth}: HttpContextContract) {
+
+    if (await bouncer.denies('isManager')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
+
     let payload = await request.validate(EmployeeValidator)
+    const role = await Role.find(payload.role)
 
     try {
       
       let newEmployee = await Employee.create(payload)
+      newEmployee.related('role').associate(role)
       const token = await auth.use('api').attempt(newEmployee.email, payload.password)
       return token
 
@@ -53,7 +61,9 @@ export default class EmployeesController {
     response.status(200).send(employee)
   }
     
-  public async destroy({ request, response }: HttpContextContract) {
+  public async destroy({ request, response, bouncer }: HttpContextContract) {
+
+    await bouncer.authorize('isManager')
     
     let employee = await Employee.find(request.param('id'))
     

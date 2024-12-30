@@ -18,6 +18,7 @@
 |
 */
 
+import Bouncer from '@ioc:Adonis/Addons/Bouncer'
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.group(() => {

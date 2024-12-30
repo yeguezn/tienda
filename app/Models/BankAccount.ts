@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import { BaseModel, column, hasMany, HasMany } from '@ioc:Adonis/Lucid/Orm'
 import Sale from './Sale'
+import Expense from './Expense'
 
 export default class BankAccount extends BaseModel {
   @column({ isPrimary: true })
@@ -16,9 +17,14 @@ export default class BankAccount extends BaseModel {
   public balance: number
 
   @hasMany(() => Sale, {
-    foreignKey:'transferedTo'
+    foreignKey:'saleId'
   })
   public sales: HasMany<typeof Sale>
+
+  @hasMany(() => Expense, {
+    foreignKey:'expenseId'
+  })
+  public expenses: HasMany<typeof Expense>
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime

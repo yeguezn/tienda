@@ -14,7 +14,12 @@ export default class ProductsController {
 
   }
 
-  public async store({request, response}: HttpContextContract) {
+  public async store({request, response, bouncer}: HttpContextContract) {
+    
+    if (await bouncer.denies('isManager')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
+
     let payload = await request.validate(ProductValidator)
     let filePath:string = ''
 
@@ -38,7 +43,7 @@ export default class ProductsController {
     response.status(201).send(newProduct)
   }
 
-  public async show({ request, response}: HttpContextContract) {
+  public async show({ request, response }: HttpContextContract) {
 
     let product = await Product.find(request.param('id'))
 
@@ -53,7 +58,11 @@ export default class ProductsController {
 
   }
 
-  public async update({request, response}: HttpContextContract) {
+  public async update({request, response, bouncer}: HttpContextContract) {
+
+    if (await bouncer.denies('isManager')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
 
     let payload = await request.validate(UpdateProductValidator)
 
@@ -66,7 +75,11 @@ export default class ProductsController {
     response.status(200).send(product)
   }
 
-  public async destroy({ request, response }: HttpContextContract) {
+  public async destroy({ request, response, bouncer }: HttpContextContract) {
+
+    if (await bouncer.denies('isManager')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
 
     let product = await Product.find(request.param('id'))
 
@@ -82,7 +95,11 @@ export default class ProductsController {
 
   }
 
-  public async updateProductImage({ request, response }: HttpContextContract) {
+  public async updateProductImage({ request, response, bouncer }: HttpContextContract) {
+
+    if (await bouncer.denies('isManager')) {
+      return response.status(403).send('You are not allowed to perform this action')
+    }
 
     let payload = await request.validate(UpdateProductImageValidator)
     let product = await Product.find(payload.params.id)
