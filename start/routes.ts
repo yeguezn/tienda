@@ -67,6 +67,15 @@ Route.group(() => {
 
 }).middleware('auth')
 
+Route.group(() => {
+    Route.get('/expenses', 'ExpensesController.index')
+    Route.post('/expenses', 'ExpensesController.store')
+    Route.get('/expenses/:id', 'ExpensesController.show')
+    Route.put('/expenses/:id', 'ExpensesController.update')
+    Route.delete('/expenses/:id', 'ExpensesController.destroy')
+
+}).middleware('auth')
+
 
 Route.group(() => {
 
