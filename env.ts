@@ -26,4 +26,8 @@ export default Env.rules({
 	NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
 	DB_CONNECTION: Env.schema.string(),
 	TZ:Env.schema.string(),
+	REDIS_CONNECTION: Env.schema.enum(['local'] as const),
+	REDIS_HOST: Env.schema.string({ format: 'host' }),
+	REDIS_PORT: Env.schema.number(),
+	REDIS_PASSWORD: Env.schema.string.optional(),
 })

@@ -605,6 +605,18 @@
           "description": "Actions to implement"
         }
       ]
+    },
+    "scheduler:work": {
+      "settings": {
+        "loadApp": true,
+        "stayAlive": true
+      },
+      "commandPath": "@verful/scheduler/build/commands/scheduler_work",
+      "commandName": "scheduler:work",
+      "description": "Process the scheduled tasks",
+      "args": [],
+      "aliases": [],
+      "flags": []
     }
   },
   "aliases": {}
