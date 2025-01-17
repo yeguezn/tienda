@@ -1,6 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, ManyToMany, manyToMany } from '@ioc:Adonis/Lucid/Orm'
-import Sale from './Sale'
+import { BaseModel, column } from '@ioc:Adonis/Lucid/Orm'
 
 export default class Product extends BaseModel {
   @column({ isPrimary: true })
@@ -11,9 +10,6 @@ export default class Product extends BaseModel {
 
   @column()
   public code: string
-
-  @column()
-  public stock: number
 
   @column()
   public price: number

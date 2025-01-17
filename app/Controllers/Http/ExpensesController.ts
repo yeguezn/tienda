@@ -71,16 +71,15 @@ export default class ExpensesController {
     
       for (const productDetail of payload.products) {
 
-        const { code, ...body } = productDetail
+        const { code, stock, ...body } = productDetail
     
         product = await Product.updateOrCreate({code:code}, body)
     
-    
-        subtotal = product.price * productDetail.stock
+        subtotal = product.price * stock
           
         await expense.related('products').attach({
           [product.id]:{
-            quantity:productDetail.stock,
+            quantity:stock,
             subtotal:subtotal
           }
         })
@@ -92,11 +91,6 @@ export default class ExpensesController {
           throw new Exception('NotEnoughFounds', 400)
               
         }
-      
-        await Database.from('products')
-        .where('id', product.id)
-        .useTransaction(trx)
-        .increment('stock', productDetail.stock)
       
         await Database.from('bank_accounts')
         .where('id', bankAccount.id)
@@ -188,17 +182,7 @@ export default class ExpensesController {
       .useTransaction(trx).increment('balance', expense.$extras.total)
     
     
-      for (const product of expense.products) {
-            
-        await Database.from('products').where('id', product.id)
-        .useTransaction(trx).forUpdate().first()
-    
-        await Database.from('products').where('id', product.id)
-        .useTransaction(trx).decrement('stock', product.$extras.pivot_quantity)
-            
-      }
-    
-      await Database.from('sales').where('id', expense.id)
+      await Database.from('expenses').where('id', expense.id)
       .useTransaction(trx).delete()
     
       response.status(200).send('The expense was deleted succesfully')

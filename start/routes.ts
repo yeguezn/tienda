@@ -17,7 +17,11 @@
 | import './routes/customer'
 |
 */
+
 import Route from '@ioc:Adonis/Core/Route'
+import Database from '@ioc:Adonis/Lucid/Database'
+import Sale from 'App/Models/Sale'
+import Product from 'App/Models/Product'
 
 Route.group(() => {
     Route.get('/customers', 'CustomersController.index')
@@ -79,5 +83,22 @@ Route.group(() => {
 
     Route.post("/login", "AuthController.login")
     Route.post("/logout", "AuthController.logout")
+
+})
+
+Route.get('/test', async () => {
+    return await Database.from('products')
+    .join('sale_details', 'sale_details.product_id', '=', 'products.id')
+    .where('products.id', 2)
+    .select('products.price', 'products.name')
+    .sum('sale_details.quantity as quantity').firstOrFail()
+})
+
+Route.get('/test2', async () => {
+    let obj = {code:1234, name:'Laptop', stock:10, imgSrc:'laptop.jpg', price:999.99}
+
+    const { code, stock, ...body } = obj
+
+    return body
 
 })

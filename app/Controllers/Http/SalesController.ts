@@ -3,6 +3,7 @@ import Database from '@ioc:Adonis/Lucid/Database'
 import SaleValidator from 'App/Validators/SaleValidator'
 import Sale from 'App/Models/Sale'
 import { Exception } from '@adonisjs/core/build/standalone'
+import Application from '@ioc:Adonis/Core/Application'
 
 export default class SalesController {
   public async index({response}: HttpContextContract) {
@@ -51,19 +52,26 @@ export default class SalesController {
 
     let payload = await request.validate(SaleValidator)
     let subtotal:number
+    let stock:number
     const trx = await Database.transaction()
     let product
+    let expense
     let bankAccount
 
     try {
       bankAccount = await Database.from('bank_accounts')
       .where('id', payload.bankAccount).useTransaction(trx).forUpdate().firstOrFail()
 
+      await payload.imgSrc.move(Application.publicPath(), {
+        name:`${payload.customer}.${payload.imgSrc.extname}`
+      })
+
       let sale = new Sale()
 
       sale.customerId = payload.customer
       sale.bankAccountId = payload.bankAccount
       sale.employeeId = auth.user?.id
+      sale.imgSrc = payload.imgSrc.filePath
 
       sale.useTransaction(trx)
       
@@ -71,22 +79,30 @@ export default class SalesController {
 
       for (const productDetail of payload.products) {
 
-        product = await Database.from('products').where('id', productDetail.id)
-        .useTransaction(trx).forUpdate().firstOrFail()
+        product = await Database.from('products')
+        .join('sale_details', 'sale_details.product_id', '=', 'products.id')
+        .select('products.name', 'products.price')
+        .where('products.id', productDetail.id)
+        .useTransaction(trx).sum('quantity as quantity').firstOrFail()
 
-        if (product.stock === 0) {
+        expense = await Database.from('expense_details').where('id', productDetail.id)
+        .useTransaction(trx).sum('quantity as quantity').firstOrFail()
 
-          response.status(400).send(`We ran out of ${product.name}`)
-
-          throw new Exception('ProductSoldOut', 400)
-          
-        }
-
-        if (productDetail.quantity > product.stock) {
+        if (productDetail.quantity > expense.quantity) {
 
           response.status(400).send(`We dont have enough units of ${product.name}`)
 
           throw new Exception('NotEnoughUnits', 400)
+          
+        }
+
+        stock = expense.quantity - product.quantity
+
+        if (stock === 0) {
+
+          response.status(400).send(`We ran out of the product`)
+
+          throw new Exception('ProductSoldOut', 400)
           
         }
   
@@ -98,11 +114,6 @@ export default class SalesController {
             subtotal:subtotal
           }
         })
-  
-        await Database.from('products')
-        .where('id', product.id)
-        .useTransaction(trx)
-        .decrement('stock', productDetail.quantity)
   
         await Database.from('bank_accounts')
         .where('id', bankAccount.id)
@@ -194,17 +205,6 @@ export default class SalesController {
 
       await Database.from('bank_accounts').where('id', sale.bankAccount.id)
       .useTransaction(trx).decrement('balance', sale.$extras.total)
-
-
-      for (const product of sale.products) {
-        
-        await Database.from('products').where('id', product.id)
-        .useTransaction(trx).forUpdate().first()
-
-        await Database.from('products').where('id', product.id)
-        .useTransaction(trx).increment('stock', product.$extras.pivot_quantity)
-        
-      }
 
       await Database.from('sales').where('id', sale.id)
       .useTransaction(trx).delete()

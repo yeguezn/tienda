@@ -29,6 +29,9 @@ export default class Sale extends BaseModel {
     }
   }
 
+  @column()
+  public imgSrc: string
+
   @column({ serializeAs:null })
   public customerId:number
 

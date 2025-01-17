@@ -42,7 +42,12 @@ export default class SaleValidator {
 
     customer:schema.number([
       rules.exists({table:'customers', column:'id'})
-    ])
+    ]),
+
+    imgSrc:schema.file({
+      size:'2mb',
+      extnames:['jpg', 'png', 'jpeg']
+    })
 
   })
 
